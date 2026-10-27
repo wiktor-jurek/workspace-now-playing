@@ -10,6 +10,7 @@ from .providers import Forbidden, RateLimited, TokenRevoked, Unauthorized
 
 log = logging.getLogger("now-playing.worker")
 
+MAX_TEXT = 64  # Chat's limit for custom status text
 REFRESH_SECONDS = config.STATUS_TTL / 2  # re-send an unchanged track before its TTL runs out
 _UNKNOWN = "\0unknown"  # forces a sync on the first round after (re)start
 
@@ -63,6 +64,11 @@ async def _now_playing(user: db.User, st: _State) -> str | None:
         return await providers.spotify_now_playing(await _spotify_token(user, st))
 
 
+def status_text(prefix: str, track: str) -> str:
+    text = f"{prefix} {track}" if prefix else track
+    return text if len(text) <= MAX_TEXT else text[: MAX_TEXT - 1] + "…"
+
+
 def _is_ours(status: dict | None) -> bool:
     return bool(status) and status.get("emoji", {}).get("unicode") == config.STATUS_EMOJI
 
@@ -70,8 +76,9 @@ def _is_ours(status: dict | None) -> bool:
 async def sync_user(user: db.User) -> None:
     st = _states.setdefault(user.id, _State())
     track = await _now_playing(user, st)
+    text = status_text(user.prefix, track) if track else None
     stale = time.monotonic() - st.last_sent > REFRESH_SECONDS
-    if track == st.last and not (track and stale):
+    if text == st.last and not (text and stale):
         return
 
     try:
@@ -79,10 +86,10 @@ async def sync_user(user: db.User) -> None:
         current = await providers.chat_get_status(token)
         if current and not _is_ours(current):
             db.set_error(user.id, "You have your own status set, so it's left alone.")
-        elif track:
-            await providers.chat_set_status(token, track)
-            log.info("user %s: %s", user.id, track)
-            db.set_status(user.id, track)
+        elif text:
+            await providers.chat_set_status(token, text)
+            log.info("user %s: %s", user.id, text)
+            db.set_status(user.id, text)
         else:
             if current:
                 await providers.chat_clear_status(token)
@@ -91,7 +98,7 @@ async def sync_user(user: db.User) -> None:
     except Unauthorized:
         st.google_access = None
         raise
-    st.last, st.last_sent = track, time.monotonic()
+    st.last, st.last_sent = text, time.monotonic()
 
 
 async def clear_user(user: db.User) -> None:

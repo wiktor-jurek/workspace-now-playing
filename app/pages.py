@@ -3,7 +3,7 @@
 from html import escape
 
 from . import config
-from .db import User
+from .db import MAX_PREFIX, User
 
 CSS = """
 :root { --bg:#f7f7f5; --card:#fff; --fg:#1d1d1f; --muted:#6b6b70; --line:#e4e4e0;
@@ -29,6 +29,9 @@ p { color:var(--muted); margin:0 0 16px; }
 .btn.danger { background:transparent; color:var(--danger); border:1px solid var(--line); }
 form { margin:0; display:inline; }
 .error { color:var(--danger); font-size:14px; margin-top:8px; }
+.prefix-form { display:flex; gap:8px; margin-top:8px; }
+.prefix-form input { flex:1; min-width:0; font:inherit; padding:8px 12px; border-radius:10px;
+       border:1px solid var(--line); background:var(--bg); color:var(--fg); }
 footer { color:var(--muted); font-size:13px; margin-top:32px; }
 footer a { color:inherit; }
 """
@@ -100,6 +103,14 @@ def dashboard(user: User) -> str:
   <div class="sub">Current Chat status</div>
   <div class="status">{status}</div>{error}
   <div class="row"><span></span>{toggle}</div>
+</div>
+<div class="card">
+  <div class="label">Prefix</div>
+  <div class="sub">Shown before the track, e.g. “{escape(user.prefix or 'Listening to')} Song – Artist”. Leave empty for none.</div>
+  <form class="prefix-form" method="post" action="/prefix">
+    <input name="prefix" value="{escape(user.prefix)}" maxlength="{MAX_PREFIX}" placeholder="Listening to" aria-label="Prefix">
+    <button class="btn secondary">Save</button>
+  </form>
 </div>
 <div class="card">
   <div class="row"><div><div class="label">Google Chat</div><div class="sub">Sets your custom status</div></div>{google_action}</div>

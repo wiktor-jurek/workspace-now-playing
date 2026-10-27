@@ -3,7 +3,7 @@
 Show what you're listening to on Spotify as your **Google Chat status**, the same way Slack and Discord can.
 
 ```
-🎵 Waking the Demon – Bullet For My Valentine
+🎵 Listening to Waking the Demon – Bullet For My Valentine
 ```
 
 Sign in with Google, connect Spotify, and you're done. The status follows your track changes, clears when you pause, and never overwrites a status you set yourself.
@@ -20,6 +20,7 @@ It's a small self-hostable service: a single Docker container with SQLite and no
 - **Google:** uses the official [`users.availability`](https://developers.google.com/workspace/chat/api/reference/rest/v1/users.availability) endpoint of the Google Chat API, with the `chat.users.availability` scope. That scope lets the app read and set your status and nothing else: no messages, no spaces.
 - **Spotify:** uses [Get Currently Playing Track](https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track) with the `user-read-currently-playing` scope. Playback on your phone, desktop, or a speaker all counts. Podcasts show as `Episode – Show`.
 - **Status lifetime:** each status is set with a 10-minute TTL and refreshed while the track keeps playing. If the service goes down, statuses clear themselves.
+- **Prefix:** each user can set the text before the track on their dashboard (default `Listening to`, or empty). The whole status is cut to Chat's 64-character limit.
 - **Manual statuses are left alone:** if your current status uses any emoji other than 🎵, the service won't touch it.
 - **Storage:** only your email and the two refresh tokens, encrypted at rest. *Delete account* clears your status, revokes Google access, and deletes the row.
 

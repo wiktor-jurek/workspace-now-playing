@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import logging
 import secrets
+from urllib.parse import parse_qs
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
@@ -129,6 +130,15 @@ async def toggle(request: Request):
         db.set_enabled(user.id, not user.enabled)
         if user.enabled:
             await worker.clear_user(user)
+    return _redirect("/")
+
+
+@app.post("/prefix")
+async def prefix(request: Request):
+    if user := _current_user(request):
+        # Parsed by hand to avoid a python-multipart dependency for one field.
+        form = parse_qs((await request.body()).decode())
+        db.set_prefix(user.id, form.get("prefix", [""])[0])
     return _redirect("/")
 
 

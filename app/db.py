@@ -23,9 +23,18 @@ CREATE TABLE IF NOT EXISTS users (
     enabled INTEGER NOT NULL DEFAULT 1,
     last_status TEXT,
     last_error TEXT,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    prefix TEXT NOT NULL DEFAULT 'Listening to'
 );
 """
+
+DEFAULT_PREFIX = "Listening to"
+MAX_PREFIX = 30
+
+# Columns added after the first release: (name, definition)
+MIGRATIONS = [
+    ("prefix", f"TEXT NOT NULL DEFAULT '{DEFAULT_PREFIX}'"),
+]
 
 _conn: sqlite3.Connection | None = None
 
@@ -39,6 +48,7 @@ class User:
     enabled: bool
     last_status: str | None
     last_error: str | None
+    prefix: str
 
 
 def _encrypt(value: str | None) -> str | None:
@@ -58,6 +68,7 @@ def _user(row: sqlite3.Row) -> User:
         enabled=bool(row["enabled"]),
         last_status=row["last_status"],
         last_error=row["last_error"],
+        prefix=row["prefix"],
     )
 
 
@@ -68,6 +79,10 @@ def connect() -> None:
     _conn.row_factory = sqlite3.Row
     _conn.execute("PRAGMA journal_mode=WAL")
     _conn.executescript(SCHEMA)
+    columns = {r["name"] for r in _conn.execute("PRAGMA table_info(users)")}
+    for name, definition in MIGRATIONS:
+        if name not in columns:
+            _conn.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
 
 
 def close() -> None:
@@ -118,6 +133,10 @@ def set_spotify_token(user_id: int, refresh_token: str | None) -> None:
 
 def set_enabled(user_id: int, enabled: bool) -> None:
     _db().execute("UPDATE users SET enabled = ? WHERE id = ?", (int(enabled), user_id))
+
+
+def set_prefix(user_id: int, prefix: str) -> None:
+    _db().execute("UPDATE users SET prefix = ? WHERE id = ?", (prefix.strip()[:MAX_PREFIX], user_id))
 
 
 def set_status(user_id: int, status: str | None) -> None:

@@ -21,8 +21,6 @@ SPOTIFY_NOW_PLAYING_URL = "https://api.spotify.com/v1/me/player/currently-playin
 GOOGLE_REDIRECT = f"{config.BASE_URL}/auth/google/callback"
 SPOTIFY_REDIRECT = f"{config.BASE_URL}/auth/spotify/callback"
 
-MAX_TEXT = 64
-
 http = httpx.AsyncClient(timeout=15)
 
 
@@ -203,5 +201,4 @@ async def spotify_now_playing(access_token: str) -> str | None:
         by = item.get("show", {}).get("name", "")
     else:
         by = ", ".join(a["name"] for a in item.get("artists", []))
-    text = f"{item['name']} – {by}" if by else item["name"]
-    return text if len(text) <= MAX_TEXT else text[: MAX_TEXT - 1] + "…"
+    return f"{item['name']} – {by}" if by else item["name"]
