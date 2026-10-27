@@ -80,6 +80,14 @@ Using another host? `docker compose up -d` with a `.env` file (see `.env.example
 
 Run a **single replica**: the sync worker runs inside the web process.
 
+## Troubleshooting
+
+| Error | Fix |
+|---|---|
+| `404 Google Chat app not found` | Configure the Chat app (Google Cloud step 3). |
+| `api.spotify.com refused access` (403) | The Spotify app is in development mode and this Spotify account isn't on its list. Add the user's **Spotify** email under *User Management* in the Spotify dashboard, then disconnect and reconnect Spotify. |
+| Users signed out of Google after 7 days | The OAuth consent screen is *External* and still in *Testing*. Publish it. |
+
 ## Local development
 
 ```sh

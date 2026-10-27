@@ -40,9 +40,25 @@ class RateLimited(Exception):
         self.retry_after = retry_after
 
 
+class Forbidden(Exception):
+    """The API refused the request (e.g. user not allowlisted in a Spotify dev-mode app)."""
+
+
+def _error_message(r: httpx.Response) -> str:
+    try:
+        error = r.json().get("error")
+    except ValueError:
+        return r.text[:200]
+    if isinstance(error, dict):
+        return error.get("message") or str(error)
+    return str(error or r.text[:200])
+
+
 def _raise_for(r: httpx.Response) -> None:
     if r.status_code == 401:
         raise Unauthorized(r.text)
+    if r.status_code == 403:
+        raise Forbidden(f"{r.url.host} refused access: {_error_message(r)}")
     if r.status_code == 429:
         raise RateLimited(float(r.headers.get("Retry-After", 30)))
     r.raise_for_status()

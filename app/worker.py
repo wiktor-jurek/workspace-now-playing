@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 
 from . import config, db, providers
-from .providers import RateLimited, TokenRevoked, Unauthorized
+from .providers import Forbidden, RateLimited, TokenRevoked, Unauthorized
 
 log = logging.getLogger("now-playing.worker")
 
@@ -115,6 +115,9 @@ async def _sync_guarded(user: db.User, sem: asyncio.Semaphore) -> None:
             await sync_user(user)
         except TokenRevoked as e:
             _states.pop(user.id, None)
+            db.set_error(user.id, str(e))
+        except Forbidden as e:
+            log.warning("user %s: %s", user.id, e)
             db.set_error(user.id, str(e))
         except RateLimited as e:
             _paused_until = time.monotonic() + e.retry_after
