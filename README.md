@@ -48,7 +48,7 @@ You need three things: a Google Cloud OAuth client, a Spotify app, and somewhere
 
 ### 2. Spotify
 
-1. Create an app at the [Spotify developer dashboard](https://developer.spotify.com/dashboard). Choose **Web API**.
+1. Create an app at the [Spotify developer dashboard](https://developer.spotify.com/dashboard) with a Spotify account that has **Premium**. Spotify blocks development-mode apps whose owner isn't on Premium. Choose **Web API**.
 2. Redirect URI: `https://YOUR-DOMAIN/auth/spotify/callback`
 3. Copy the client ID and secret.
 4. New Spotify apps run in **development mode**: only users you add under *User Management* can connect, up to a small cap. Fine for a team; a public instance needs Spotify's extended quota.
@@ -86,6 +86,8 @@ Run a **single replica**: the sync worker runs inside the web process.
 |---|---|
 | `404 Google Chat app not found` | Configure the Chat app (Google Cloud step 3). |
 | `api.spotify.com refused access` (403) | The Spotify app is in development mode and this Spotify account isn't on its list. Add the user's **Spotify** email under *User Management* in the Spotify dashboard, then disconnect and reconnect Spotify. |
+| `Active premium subscription required for the owner of the app` | The Spotify account that **owns the developer app** needs Premium. Upgrade it, or recreate the app under a Premium account and update `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET`. After a subscription change, Spotify can take a few hours to allow requests. |
+| `no available server` | Coolify's proxy has no healthy container. Usually this is a redeploy in progress; otherwise check the container logs in Coolify. |
 | Users signed out of Google after 7 days | The OAuth consent screen is *External* and still in *Testing*. Publish it. |
 
 ## Local development
