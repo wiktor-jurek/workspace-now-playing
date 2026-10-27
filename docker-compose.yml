@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      BASE_URL: ${BASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
+      ALLOWED_DOMAINS: ${ALLOWED_DOMAINS:-}
+      POLL_INTERVAL: ${POLL_INTERVAL:-15}
+      SOURCE_URL: ${SOURCE_URL:-}
+    volumes:
+      - data:/data
+    expose:
+      - "8000"
+
+volumes:
+  data:
